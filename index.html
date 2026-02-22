@@ -171,8 +171,8 @@
                 { fps: 10, qrbox: {width: 250, height: 250} },
                 (scannedEncryptedText) => {
                     // تشغيل الصوت وقفل الكاميرا
-                    beepSound.play().catch(e => console.log("Sound blocked by browser")); // تجنب أخطاء الصوت
-                    html5QrCode.stop().then(() => {
+                      playBeep(); // تشغيل الصوت المبرمج
+                     html5QrCode.stop().then(() => {
                         document.getElementById('reader').style.display = 'none'; // إخفاء الكاميرا
                         let decryptedText = decryptData(scannedEncryptedText, SECRET_KEY);
                         if (decryptedText && decryptedText.includes('|')) {
@@ -200,6 +200,30 @@
             document.getElementById('data-container').style.display = 'block';
         }
 
+        // دالة إصدار صوت الـ Beep برمجياً (بدون ملفات)
+        function playBeep() {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+        
+                oscillator.type = 'sine'; // نوع نغمة الصوت
+                oscillator.frequency.value = 800; // حدة الصوت (800 ممتازة للاسكانر)
+        
+                gainNode.gain.setValueAtTime(1, audioCtx.currentTime);
+                // الصوت يختفي تدريجياً خلال 0.1 ثانية
+                gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1); 
+        
+                oscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+        
+                oscillator.start();
+                oscillator.stop(audioCtx.currentTime + 0.1);
+            } catch (e) {
+                console.log("متصفحك لا يدعم توليد الصوت");
+            }
+        }
+
         function registerAttendance() {
             document.getElementById('result-msg').innerText = "جاري التسجيل...";
             document.getElementById('result-msg').style.color = "orange";
@@ -222,3 +246,4 @@
 
 </body>
 </html>
+
