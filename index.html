@@ -3,52 +3,131 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تسجيل الحضور</title>
+    <title>تسجيل حضور Cat Reloaded</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; }
-        #reader { width: 100%; max-width: 500px; margin: 0 auto; }
-        #result { margin-top: 20px; font-size: 20px; font-weight: bold; color: green; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; margin: 0; padding: 20px; background-color: #f4f7f6; }
+        h2 { color: #333; }
+        #reader { width: 100%; max-width: 400px; margin: 0 auto; border-radius: 10px; overflow: hidden; }
+        
+        /* تنسيق قسم عرض البيانات */
+        #data-container { display: none; margin-top: 20px; padding: 20px; background: white; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); max-width: 400px; margin-left: auto; margin-right: auto; }
+        .data-row { margin-bottom: 15px; font-size: 18px; text-align: right; }
+        .data-row span { font-weight: bold; color: #0056b3; }
+        
+        /* تنسيق الزراير */
+        button { padding: 12px 20px; font-size: 16px; font-weight: bold; border: none; border-radius: 5px; cursor: pointer; width: 100%; margin-bottom: 10px; }
+        #btn-start { background-color: #17a2b8; color: white; max-width: 400px; margin-top: 20px; }
+        #btn-register { background-color: #28a745; color: white; }
+        #btn-cancel { background-color: #dc3545; color: white; }
+        button:disabled { background-color: #6c757d; cursor: not-allowed; }
+        
+        #result-msg { margin-top: 15px; font-size: 18px; font-weight: bold; }
     </style>
 </head>
 <body>
 
     <h2>نظام تسجيل الحضور 📷</h2>
+    
+    <button id="btn-start" onclick="startCamera()">فتح الكاميرا للمسح</button>
+    
     <div id="reader"></div>
-    <p id="result"></p>
+
+    <div id="data-container">
+        <div class="data-row">الاسم: <span id="display-name"></span></div>
+        <div class="data-row">الرقم القومي: <span id="display-nid"></span></div>
+        <div class="data-row">الإيميل: <span id="display-email"></span></div>
+        
+        <button id="btn-register" onclick="registerAttendance()">تسجيل حضور</button>
+        <button id="btn-cancel" onclick="startCamera()">إلغاء وإعادة المسح</button>
+        <p id="result-msg"></p>
+    </div>
 
     <script>
         // *** حط اللينك بتاع Apps Script اللي نسخته هنا ***
         const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx7UFfhyGZDyaBfEKmRnB6kSaSinIiaAQ9alw0Wzl-b5tnXpn7UhoWwMhGCYla1DGJWHQ/exec"; 
+        
+        let html5QrCode;
+        let currentScannedText = "";
 
-        let isScanning = true;
+        // دالة لفتح الكاميرا
+        function startCamera() {
+            document.getElementById('data-container').style.display = 'none';
+            document.getElementById('btn-start').style.display = 'none';
+            document.getElementById('result-msg').innerText = "";
+            document.getElementById('btn-register').disabled = false;
 
-        function onScanSuccess(decodedText, decodedResult) {
-            if (!isScanning) return; // عشان ميقعدش يبعت طلبات ورا بعض
-            isScanning = false;
-            
-            document.getElementById('result').innerText = "جاري تسجيل: " + decodedText + "...";
-
-            // إرسال البيانات لجوجل شيت
-            fetch(APPS_SCRIPT_URL + "?id=" + encodeURIComponent(decodedText), { mode: 'no-cors' })
-                .then(() => {
-                    document.getElementById('result').innerText = "✅ تم تسجيل حضور: " + decodedText;
-                    // يرجع يشتغل تاني بعد 3 ثواني عشان يسكان الشخص اللي بعده
-                    setTimeout(() => { 
-                        isScanning = true; 
-                        document.getElementById('result').innerText = "";
-                    }, 3000);
-                }).catch(err => {
-                    document.getElementById('result').innerText = "❌ حصلت مشكلة في التسجيل";
-                    isScanning = true;
-                });
+            // لو الكاميرا شغالة نقفلها الأول قبل ما نفتحها تاني
+            if (html5QrCode && html5QrCode.isScanning) {
+                html5QrCode.stop().then(startScannerProcess).catch(err => console.log(err));
+            } else {
+                startScannerProcess();
+            }
         }
 
-        let html5QrcodeScanner = new Html5QrcodeScanner(
-            "reader", { fps: 10, qrbox: {width: 250, height: 250} }, false);
-        html5QrcodeScanner.render(onScanSuccess);
+        // إعدادات المسح
+        function startScannerProcess() {
+            if (!html5QrCode) {
+                html5QrCode = new Html5Qrcode("reader");
+            }
+            html5QrCode.start(
+                { facingMode: "environment" }, // استخدام الكاميرا الخلفية
+                { fps: 10, qrbox: {width: 250, height: 250} },
+                (decodedText) => {
+                    // أول ما يلقط الـ QR يقفل الكاميرا
+                    html5QrCode.stop().then(() => {
+                        showData(decodedText);
+                    }).catch(err => console.log("خطأ في قفل الكاميرا", err));
+                },
+                (errorMessage) => {
+                    // تجاهل أخطاء عدم العثور على QR في الفريم
+                }
+            ).catch(err => {
+                alert("حدث خطأ في فتح الكاميرا، تأكد من إعطاء الصلاحيات.");
+                document.getElementById('btn-start').style.display = 'block';
+            });
+        }
+
+        // دالة عرض البيانات بعد قفل الكاميرا
+        function showData(text) {
+            currentScannedText = text; // حفظ النص الممسوح
+            
+            // تقسيم النص اللي يفصل بينه علامة |
+            let parts = text.split('|');
+            let name = parts[0] ? parts[0].trim() : 'غير معروف';
+            let nid = parts[1] ? parts[1].trim() : 'غير معروف';
+            let email = parts[2] ? parts[2].trim() : 'غير معروف';
+
+            document.getElementById('display-name').innerText = name;
+            document.getElementById('display-nid').innerText = nid;
+            document.getElementById('display-email').innerText = email;
+
+            // إظهار مربع البيانات
+            document.getElementById('data-container').style.display = 'block';
+        }
+
+        // دالة إرسال البيانات لجوجل شيت عند الضغط على زر "تسجيل حضور"
+        function registerAttendance() {
+            document.getElementById('result-msg').innerText = "جاري التسجيل...";
+            document.getElementById('result-msg').style.color = "orange";
+            document.getElementById('btn-register').disabled = true;
+
+            fetch(APPS_SCRIPT_URL + "?id=" + encodeURIComponent(currentScannedText), { mode: 'no-cors' })
+                .then(() => {
+                    document.getElementById('result-msg').innerText = "✅ تم تسجيل الحضور بنجاح!";
+                    document.getElementById('result-msg').style.color = "green";
+                    
+                    // يرجع يفتح الكاميرا لوحده بعد ثانيتين للشخص اللي بعده
+                    setTimeout(() => {
+                        startCamera();
+                    }, 2000);
+                }).catch(err => {
+                    document.getElementById('result-msg').innerText = "❌ حدثت مشكلة في التسجيل!";
+                    document.getElementById('result-msg').style.color = "red";
+                    document.getElementById('btn-register').disabled = false;
+                });
+        }
     </script>
 
 </body>
-
 </html>
