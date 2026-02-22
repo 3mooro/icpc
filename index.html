@@ -3,61 +3,158 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تسجيل حضور Cat Reloaded</title>
+    <title>ICPC Mansoura Attendance</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Cairo:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; margin: 0; padding: 20px; background-color: #f4f7f6; }
-        h2 { color: #333; }
-        #reader { width: 100%; max-width: 400px; margin: 0 auto; border-radius: 10px; overflow: hidden; }
+        /* تنسيق الصفحة بالكامل (الخلفية الزرقاء) */
+        body {
+            font-family: 'Roboto', 'Cairo', sans-serif;
+            background-color: #0a193d; /* اللون الأزرق الداكن من اللوجو */
+            color: #ffffff;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+        /* تنسيق اللوجو */
+        #logo {
+            max-width: 250px;
+            margin-bottom: 20px;
+        }
+        /* العنوان الرئيسي */
+        h1 {
+            font-family: 'Roboto', sans-serif;
+            font-weight: 700;
+            font-size: 28px;
+            margin-bottom: 30px;
+            letter-spacing: 1px;
+        }
+        /* الحاوية البيضاء الرئيسية */
+        .container {
+            background-color: #ffffff;
+            color: #333;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            width: 100%;
+            max-width: 500px;
+        }
+        /* منطقة الكاميرا */
+        #reader {
+            width: 100%;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        /* إخفاء أيقونة التحميل الافتراضية للمكتبة */
+        #reader img[alt="Info icon"] { display: none; }
+        #reader__status_span { display: none !important; }
+
+        /* منطقة عرض البيانات */
+        #data-container {
+            display: none; /* مخفية في البداية */
+            margin-top: 20px;
+        }
+        .data-row {
+            font-size: 18px;
+            margin-bottom: 15px;
+            text-align: right;
+        }
+        .data-row span {
+            font-weight: 700;
+            color: #0056b3;
+            display: block;
+            margin-top: 5px;
+        }
         
-        /* تنسيق قسم عرض البيانات */
-        #data-container { display: none; margin-top: 20px; padding: 20px; background: white; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); max-width: 400px; margin-left: auto; margin-right: auto; }
-        .data-row { margin-bottom: 15px; font-size: 18px; text-align: right; }
-        .data-row span { font-weight: bold; color: #0056b3; }
-        
-        /* تنسيق الزراير */
-        button { padding: 12px 20px; font-size: 16px; font-weight: bold; border: none; border-radius: 5px; cursor: pointer; width: 100%; margin-bottom: 10px; }
-        #btn-start { background-color: #17a2b8; color: white; max-width: 400px; margin-top: 20px; }
+        /* تنسيق الأزرار */
+        .btn {
+            padding: 12px 25px;
+            font-size: 18px;
+            font-weight: 700;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+            transition: background-color 0.2s ease;
+            font-family: 'Cairo', sans-serif;
+        }
+        #btn-start { background-color: #0056b3; color: white; }
+        #btn-start:hover { background-color: #004494; }
         #btn-register { background-color: #28a745; color: white; }
+        #btn-register:hover { background-color: #218838; }
         #btn-cancel { background-color: #dc3545; color: white; }
-        button:disabled { background-color: #6c757d; cursor: not-allowed; }
+        #btn-cancel:hover { background-color: #c82333; }
+        button:disabled { background-color: #6c757d !important; cursor: not-allowed; opacity: 0.8; }
         
-        #result-msg { margin-top: 15px; font-size: 18px; font-weight: bold; }
+        /* رسائل النتيجة */
+        #result-msg {
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: 700;
+            min-height: 27px; /* حجز مكان للرسالة عشان الصفحة متتهزش */
+        }
     </style>
 </head>
 <body>
 
-    <h2>نظام تسجيل الحضور 📷</h2>
-    
-    <button id="btn-start" onclick="startCamera()">فتح الكاميرا للمسح</button>
-    
-    <div id="reader"></div>
+    <img id="logo" src="logo.png" alt="ICPC Mansoura Logo">
+    <h1>ICPC Mansoura Attendance</h1>
 
-    <div id="data-container">
-        <div class="data-row">الاسم: <span id="display-name"></span></div>
-        <div class="data-row">الرقم القومي: <span id="display-nid"></span></div>
-        <div class="data-row">الإيميل: <span id="display-email"></span></div>
+    <div class="container">
+        <button id="btn-start" class="btn" onclick="startCamera()">فتح الكاميرا للمسح</button>
         
-        <button id="btn-register" onclick="registerAttendance()">تسجيل حضور</button>
-        <button id="btn-cancel" onclick="startCamera()">إلغاء وإعادة المسح</button>
-        <p id="result-msg"></p>
+        <div id="reader"></div>
+
+        <div id="data-container">
+            <div class="data-row">الاسم: <span id="display-name"></span></div>
+            <div class="data-row">الرقم القومي: <span id="display-nid"></span></div>
+            <div class="data-row">الإيميل: <span id="display-email"></span></div>
+            
+            <button id="btn-register" class="btn" onclick="registerAttendance()">تسجيل حضور</button>
+            <button id="btn-cancel" class="btn" onclick="startCamera()">إلغاء وإعادة المسح</button>
+            <p id="result-msg"></p>
+        </div>
     </div>
 
     <script>
-        // *** حط اللينك بتاع Apps Script اللي نسخته هنا ***
+        // *** ⚠️ استبدل هذا الرابط برابط الـ Apps Script الخاص بك ⚠️ ***
         const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx7UFfhyGZDyaBfEKmRnB6kSaSinIiaAQ9alw0Wzl-b5tnXpn7UhoWwMhGCYla1DGJWHQ/exec"; 
         
-        let html5QrCode;
-        let currentScannedText = "";
+        // 🔑 نفس المفتاح السري اللي في البايثون بالظبط
+        const SECRET_KEY = "omarloveicpc"; 
 
-        // دالة لفتح الكاميرا
+        let html5QrCode;
+        let currentDecodedText = "";
+        const beepSound = new Audio('beep.mp3'); // ملف الصوت
+
+        // دالة فك التشفير
+        function decryptData(encodedText, key) {
+            try {
+                let binaryString = atob(encodedText);
+                let keyBytes = new TextEncoder().encode(key);
+                let decryptedBytes = new Uint8Array(binaryString.length);
+                for (let i = 0; i < binaryString.length; i++) {
+                    decryptedBytes[i] = binaryString.charCodeAt(i) ^ keyBytes[i % keyBytes.length];
+                }
+                return new TextDecoder().decode(decryptedBytes);
+            } catch (e) { return null; }
+        }
+
         function startCamera() {
             document.getElementById('data-container').style.display = 'none';
             document.getElementById('btn-start').style.display = 'none';
+            document.getElementById('reader').style.display = 'block'; // إظهار الكاميرا
             document.getElementById('result-msg').innerText = "";
             document.getElementById('btn-register').disabled = false;
 
-            // لو الكاميرا شغالة نقفلها الأول قبل ما نفتحها تاني
             if (html5QrCode && html5QrCode.isScanning) {
                 html5QrCode.stop().then(startScannerProcess).catch(err => console.log(err));
             } else {
@@ -65,7 +162,6 @@
             }
         }
 
-        // إعدادات المسح
         function startScannerProcess() {
             if (!html5QrCode) {
                 html5QrCode = new Html5Qrcode("reader");
@@ -73,56 +169,51 @@
             html5QrCode.start(
                 { facingMode: "environment" }, // استخدام الكاميرا الخلفية
                 { fps: 10, qrbox: {width: 250, height: 250} },
-                (decodedText) => {
-                    // أول ما يلقط الـ QR يقفل الكاميرا
+                (scannedEncryptedText) => {
+                    // تشغيل الصوت وقفل الكاميرا
+                    beepSound.play().catch(e => console.log("Sound blocked by browser")); // تجنب أخطاء الصوت
                     html5QrCode.stop().then(() => {
-                        showData(decodedText);
+                        document.getElementById('reader').style.display = 'none'; // إخفاء الكاميرا
+                        let decryptedText = decryptData(scannedEncryptedText, SECRET_KEY);
+                        if (decryptedText && decryptedText.includes('|')) {
+                            showData(decryptedText);
+                        } else {
+                            alert("❌ هذا الـ QR Code غير صالح أو غير مشفر بنظامنا!");
+                            startCamera(); // إعادة فتح الكاميرا
+                        }
                     }).catch(err => console.log("خطأ في قفل الكاميرا", err));
                 },
-                (errorMessage) => {
-                    // تجاهل أخطاء عدم العثور على QR في الفريم
-                }
+                (errorMessage) => {}
             ).catch(err => {
-                alert("حدث خطأ في فتح الكاميرا، تأكد من إعطاء الصلاحيات.");
+                alert("⚠️ تعذر فتح الكاميرا. يرجى التأكد من منح الصلاحيات أو استخدام متصفح حديث (مثل Chrome أو Safari).");
                 document.getElementById('btn-start').style.display = 'block';
+                document.getElementById('reader').style.display = 'none';
             });
         }
 
-        // دالة عرض البيانات بعد قفل الكاميرا
         function showData(text) {
-            currentScannedText = text; // حفظ النص الممسوح
-            
-            // تقسيم النص اللي يفصل بينه علامة |
+            currentDecodedText = text; 
             let parts = text.split('|');
-            let name = parts[0] ? parts[0].trim() : 'غير معروف';
-            let nid = parts[1] ? parts[1].trim() : 'غير معروف';
-            let email = parts[2] ? parts[2].trim() : 'غير معروف';
-
-            document.getElementById('display-name').innerText = name;
-            document.getElementById('display-nid').innerText = nid;
-            document.getElementById('display-email').innerText = email;
-
-            // إظهار مربع البيانات
+            document.getElementById('display-name').innerText = parts[0] ? parts[0].trim() : '-';
+            document.getElementById('display-nid').innerText = parts[1] ? parts[1].trim() : '-';
+            document.getElementById('display-email').innerText = parts[2] ? parts[2].trim() : '-';
             document.getElementById('data-container').style.display = 'block';
         }
 
-        // دالة إرسال البيانات لجوجل شيت عند الضغط على زر "تسجيل حضور"
         function registerAttendance() {
             document.getElementById('result-msg').innerText = "جاري التسجيل...";
             document.getElementById('result-msg').style.color = "orange";
             document.getElementById('btn-register').disabled = true;
 
-            fetch(APPS_SCRIPT_URL + "?id=" + encodeURIComponent(currentScannedText), { mode: 'no-cors' })
+            fetch(APPS_SCRIPT_URL + "?id=" + encodeURIComponent(currentDecodedText), { mode: 'no-cors' })
                 .then(() => {
-                    document.getElementById('result-msg').innerText = "✅ تم تسجيل الحضور بنجاح!";
+                    document.getElementById('result-msg').innerText = "✅ تم التسجيل بنجاح!";
                     document.getElementById('result-msg').style.color = "green";
-                    
-                    // يرجع يفتح الكاميرا لوحده بعد ثانيتين للشخص اللي بعده
                     setTimeout(() => {
                         startCamera();
-                    }, 2000);
+                    }, 2000); // العودة للكاميرا بعد ثانيتين
                 }).catch(err => {
-                    document.getElementById('result-msg').innerText = "❌ حدثت مشكلة في التسجيل!";
+                    document.getElementById('result-msg').innerText = "❌ حدث خطأ في الاتصال!";
                     document.getElementById('result-msg').style.color = "red";
                     document.getElementById('btn-register').disabled = false;
                 });
@@ -131,4 +222,3 @@
 
 </body>
 </html>
-
