@@ -5,227 +5,218 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ICPC Mansoura Attendance</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
-        /* التنسيقات العامة */
+        :root {
+            --bg-color: #0a193d;
+            --card-bg: rgba(255, 255, 255, 0.95);
+            --primary: #0056b3;
+            --accent: #ffb703;
+            --text-dark: #2b2d42;
+        }
         body {
-            font-family: 'Roboto', 'Cairo', sans-serif;
-            background-color: #0a193d;
-            color: #ffffff;
-            text-align: center;
+            font-family: 'Cairo', sans-serif;
+            background: linear-gradient(135deg, var(--bg-color), #112d6e);
+            color: #fff;
             margin: 0;
             padding: 20px;
             display: flex;
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
-            box-sizing: border-box;
         }
-        #logo {
-            max-width: 500px;
-            margin-bottom: 20px;
-        }
-        h1 {
-            font-family: 'Roboto', sans-serif;
-            font-weight: 700;
-            font-size: 28px;
-            margin-bottom: 30px;
-            letter-spacing: 1px;
-        }
+        h1 { font-weight: 800; font-size: 26px; text-shadow: 0 4px 6px rgba(0,0,0,0.3); margin-bottom: 20px; }
+        
+        /* تصميم الكروت الزجاجية (Glassmorphism) */
         .container {
-            background-color: #ffffff;
-            color: #333;
-            border-radius: 15px;
+            background: var(--card-bg);
+            color: var(--text-dark);
+            border-radius: 20px;
             padding: 30px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
             width: 100%;
-            max-width: 500px;
+            max-width: 450px;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
         }
 
-        /* --- تنسيقات تسجيل الدخول الجديدة --- */
+        /* الحقول والنصوص */
         .input-field {
             width: 100%;
-            padding: 12px;
+            padding: 14px;
             margin: 10px 0;
-            border: 1px solid #ccc;
-            border-radius: 8px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
             box-sizing: border-box;
             font-family: 'Cairo', sans-serif;
             font-size: 16px;
-            text-align: right;
+            transition: border-color 0.3s;
         }
-        #login-error {
-            color: #dc3545;
-            font-weight: bold;
-            display: none;
-            margin-top: 10px;
-        }
-        .header-controls {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-        #btn-logout {
-            background-color: #6c757d;
-            color: white;
-            padding: 8px 15px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-family: 'Cairo', sans-serif;
-            font-weight: bold;
-        }
-        #btn-logout:hover { background-color: #5a6268; }
-
-        /* منطقة الكاميرا وعرض البيانات */
-        #reader {
-            width: 100%;
-            border-radius: 10px;
-            overflow: hidden;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
-        #reader img[alt="Info icon"] { display: none; }
-        #reader__status_span { display: none !important; }
-
-        #data-container {
-            display: none;
-            margin-top: 20px;
-        }
-        .data-row {
-            font-size: 18px;
-            margin-bottom: 15px;
-            text-align: right;
-        }
-        .data-row span {
-            font-weight: 700;
-            color: #0056b3;
-            display: block;
-            margin-top: 5px;
-        }
-
-        /* الأزرار */
+        .input-field:focus { border-color: var(--primary); outline: none; }
+        
+        /* الأزرار الاحترافية */
         .btn {
-            padding: 12px 25px;
-            font-size: 18px;
-            font-weight: 700;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
             width: 100%;
-            margin-top: 10px;
-            transition: background-color 0.2s ease;
+            padding: 14px;
+            font-size: 18px;
+            font-weight: 800;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: transform 0.2s, box-shadow 0.2s, background 0.3s;
             font-family: 'Cairo', sans-serif;
         }
-        #btn-start { background-color: #0056b3; color: white; }
-        #btn-start:hover { background-color: #004494; }
-        #btn-register { background-color: #28a745; color: white; }
-        #btn-register:hover { background-color: #218838; }
-        #btn-cancel { background-color: #dc3545; color: white; }
-        #btn-cancel:hover { background-color: #c82333; }
-        button:disabled { background-color: #6c757d !important; cursor: not-allowed; opacity: 0.8; }
+        .btn-primary { background: linear-gradient(45deg, var(--primary), #00a8e8); color: white; box-shadow: 0 4px 15px rgba(0, 86, 179, 0.4); }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0, 86, 179, 0.6); }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .btn:disabled { background: #adb5bd !important; cursor: not-allowed; transform: none; box-shadow: none; }
 
-        #result-msg {
-            margin-top: 20px;
-            font-size: 18px;
-            font-weight: 700;
-            min-height: 27px;
+        /* التبويبات (Tabs) */
+        .tabs {
+            display: flex;
+            background: #e9ecef;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            overflow: hidden;
         }
+        .tab-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            background: transparent;
+            font-family: 'Cairo', sans-serif;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            color: #6c757d;
+            transition: 0.3s;
+        }
+        .tab-btn.active { background: var(--primary); color: white; }
+
+        /* مناطق العرض */
+        #reader { border-radius: 15px; overflow: hidden; margin-bottom: 15px; border: 3px solid var(--primary); }
+        .data-row { font-size: 17px; margin-bottom: 10px; background: #f8f9fa; padding: 10px; border-radius: 8px; border-right: 4px solid var(--primary); }
+        .result-msg { text-align: center; font-weight: 800; font-size: 16px; margin-top: 15px; min-height: 24px; }
+        .header-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 10px;}
+        .logout-btn { background: transparent; border: 2px solid #dc3545; color: #dc3545; padding: 5px 12px; border-radius: 8px; cursor: pointer; font-family: 'Cairo', font-weight: bold; transition: 0.2s; }
+        .logout-btn:hover { background: #dc3545; color: white; }
     </style>
 </head>
 <body>
 
-    <img id="logo" src="logo.png" alt="ICPC Mansoura Logo">
-    <h1>ICPC Mansoura Attendance</h1>
+    <h1>✨ ICPC Mansoura Attendance</h1>
 
     <div id="login-container" class="container">
-        <h2 style="margin-top: 0;">تسجيل دخول المنظمين</h2>
+        <h2 style="text-align: center; color: var(--primary); margin-top: 0;">تسجيل دخول المنظمين</h2>
         <input type="text" id="username" class="input-field" placeholder="اسم المستخدم">
         <input type="password" id="password" class="input-field" placeholder="كلمة المرور">
-        <button class="btn" id="btn-login" onclick="checkLogin()">تسجيل الدخول</button>
-        <p id="login-error">اسم المستخدم أو كلمة المرور غير صحيحة!</p>
+        <button class="btn btn-primary" id="btn-login" onclick="checkLogin()">تسجيل الدخول</button>
+        <p id="login-error" class="result-msg" style="color: #dc3545; display: none;">البيانات غير صحيحة!</p>
     </div>
 
     <div id="app-container" class="container" style="display: none;">
         <div class="header-controls">
-            <h3 style="margin: 0; color: #0056b3;">لوحة المسح</h3>
-            <button id="btn-logout" onclick="logout()">تسجيل خروج</button>
+            <h3 style="margin: 0; color: var(--text-dark);">لوحة التحكم</h3>
+            <button class="logout-btn" onclick="logout()">خروج</button>
         </div>
-        
-        <button id="btn-start" class="btn" onclick="startCamera()">فتح الكاميرا للمسح</button>
-        <div id="reader"></div>
 
-        <div id="data-container">
-            <div class="data-row">الاسم: <span id="display-name"></span></div>
-            <div class="data-row">الرقم القومي: <span id="display-nid"></span></div>
-            <div class="data-row">الإيميل: <span id="display-email"></span></div>
-            
-            <button id="btn-register" class="btn" onclick="registerAttendance()">تسجيل حضور</button>
-            <button id="btn-cancel" class="btn" onclick="startCamera()">إلغاء وإعادة المسح</button>
-            <p id="result-msg"></p>
+        <div class="tabs">
+            <button class="tab-btn active" id="tab-qr" onclick="switchTab('qr')">📷 مسح QR</button>
+            <button class="tab-btn" id="tab-manual" onclick="switchTab('manual')">⌨️ إدخال يدوي</button>
+        </div>
+
+        <div id="section-qr">
+            <button id="btn-start" class="btn btn-primary" onclick="startCamera()">فتح الكاميرا</button>
+            <div id="reader" style="display: none;"></div>
+
+            <div id="data-container" style="display: none; margin-top: 15px;">
+                <div class="data-row">الاسم: <strong id="display-name"></strong></div>
+                <div class="data-row">الإيميل: <strong id="display-email"></strong></div>
+                <button id="btn-register-qr" class="btn btn-success" onclick="registerAttendanceQR()">تأكيد الحضور</button>
+                <button class="btn btn-danger" onclick="startCamera()">مسح كود آخر</button>
+            </div>
+            <p id="result-msg-qr" class="result-msg"></p>
+        </div>
+
+        <div id="section-manual" style="display: none;">
+            <p style="color: #6c757d; font-size: 14px; margin-bottom: 10px;">أدخل البريد الإلكتروني للمشارك في حال تعذر مسح الكود:</p>
+            <input type="email" id="manual-email" class="input-field" placeholder="example@email.com" dir="ltr">
+            <button id="btn-register-manual" class="btn btn-primary" onclick="registerAttendanceManual()">تسجيل الحضور</button>
+            <p id="result-msg-manual" class="result-msg"></p>
         </div>
     </div>
 
     <script>
-        // ------------------ إعدادات الدخول ------------------
-        const VALID_USERNAME = "admin";    // 👈 غير اسم المستخدم من هنا
-        const VALID_PASSWORD = "icpc";     // 👈 غير كلمة المرور من هنا
-        // ----------------------------------------------------
-
+        // ⚠️ ضع رابط السكربت الجديد هنا
         const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx7UFfhyGZDyaBfEKmRnB6kSaSinIiaAQ9alw0Wzl-b5tnXpn7UhoWwMhGCYla1DGJWHQ/exec"; 
         const SECRET_KEY = "omarloveicpc"; 
 
         let html5QrCode;
         let currentDecodedText = "";
 
-        // التحقق عند تحميل الصفحة إذا كان مسجلاً للدخول مسبقاً
         window.onload = function() {
-            if (sessionStorage.getItem("isLoggedIn") === "true") {
-                showApp();
-            }
+            if (sessionStorage.getItem("isLoggedIn") === "true") showApp();
         };
 
-        // دالة تسجيل الدخول
         function checkLogin() {
             const user = document.getElementById("username").value.trim();
             const pass = document.getElementById("password").value.trim();
+            const btn = document.getElementById("btn-login");
+            btn.innerText = "جاري التحقق..."; btn.disabled = true;
 
-            if (user === VALID_USERNAME && pass === VALID_PASSWORD) {
-                sessionStorage.setItem("isLoggedIn", "true");
-                document.getElementById("login-error").style.display = "none";
-                showApp();
-            } else {
-                document.getElementById("login-error").style.display = "block";
-            }
+            fetch(APPS_SCRIPT_URL + "?action=login&username=" + encodeURIComponent(user) + "&password=" + encodeURIComponent(pass))
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        sessionStorage.setItem("isLoggedIn", "true");
+                        document.getElementById("login-error").style.display = "none";
+                        showApp();
+                    } else {
+                        document.getElementById("login-error").style.display = "block";
+                    }
+                }).catch(() => alert("خطأ في الاتصال!"))
+                .finally(() => { btn.innerText = "تسجيل الدخول"; btn.disabled = false; });
         }
 
-        // دالة إظهار التطبيق
         function showApp() {
             document.getElementById("login-container").style.display = "none";
             document.getElementById("app-container").style.display = "block";
         }
 
-        // دالة تسجيل الخروج
         function logout() {
             sessionStorage.removeItem("isLoggedIn");
-            document.getElementById("username").value = "";
-            document.getElementById("password").value = "";
-            
-            // إيقاف الكاميرا إذا كانت تعمل
-            if (html5QrCode && html5QrCode.isScanning) {
-                html5QrCode.stop().catch(err => console.log(err));
-            }
-            
-            document.getElementById("app-container").style.display = "none";
-            document.getElementById("login-container").style.display = "block";
-            document.getElementById("reader").style.display = "none";
-            document.getElementById("data-container").style.display = "none";
-            document.getElementById("btn-start").style.display = "block";
+            if (html5QrCode && html5QrCode.isScanning) html5QrCode.stop().catch(e => console.log(e));
+            location.reload(); // إعادة تحميل الصفحة لتنظيف كل شيء
         }
 
-        // --- باقي دوال النظام كما هي ---
+        // --- التبديل بين التبويبات ---
+        function switchTab(tab) {
+            document.getElementById("tab-qr").classList.remove("active");
+            document.getElementById("tab-manual").classList.remove("active");
+            document.getElementById("section-qr").style.display = "none";
+            document.getElementById("section-manual").style.display = "none";
 
+            // إيقاف الكاميرا عند الانتقال للإدخال اليدوي
+            if (tab === 'manual' && html5QrCode && html5QrCode.isScanning) {
+                html5QrCode.stop().catch(e => console.log(e));
+                document.getElementById('btn-start').style.display = 'block';
+                document.getElementById('reader').style.display = 'none';
+                document.getElementById('data-container').style.display = 'none';
+            }
+
+            if (tab === 'qr') {
+                document.getElementById("tab-qr").classList.add("active");
+                document.getElementById("section-qr").style.display = "block";
+            } else {
+                document.getElementById("tab-manual").classList.add("active");
+                document.getElementById("section-manual").style.display = "block";
+                document.getElementById("result-msg-manual").innerText = "";
+            }
+        }
+
+        // --- وظائف الكاميرا ---
         function decryptData(encodedText, key) {
             try {
                 let binaryString = atob(encodedText);
@@ -242,94 +233,86 @@
             document.getElementById('data-container').style.display = 'none';
             document.getElementById('btn-start').style.display = 'none';
             document.getElementById('reader').style.display = 'block';
-            document.getElementById('result-msg').innerText = "";
-            document.getElementById('btn-register').disabled = false;
+            document.getElementById('result-msg-qr').innerText = "";
+            document.getElementById('btn-register-qr').disabled = false;
 
             if (html5QrCode && html5QrCode.isScanning) {
-                html5QrCode.stop().then(startScannerProcess).catch(err => console.log(err));
-            } else {
-                startScannerProcess();
-            }
+                html5QrCode.stop().then(startScanner).catch(err => console.log(err));
+            } else { startScanner(); }
         }
 
-        function startScannerProcess() {
-            if (!html5QrCode) {
-                html5QrCode = new Html5Qrcode("reader");
-            }
+        function startScanner() {
+            if (!html5QrCode) html5QrCode = new Html5Qrcode("reader");
             html5QrCode.start(
                 { facingMode: "environment" },
                 { fps: 10, qrbox: {width: 250, height: 250} },
-                (scannedEncryptedText) => {
-                      playBeep();
-                     html5QrCode.stop().then(() => {
+                (scannedText) => {
+                    playBeep();
+                    html5QrCode.stop().then(() => {
                         document.getElementById('reader').style.display = 'none';
-                        let decryptedText = decryptData(scannedEncryptedText, SECRET_KEY);
+                        let decryptedText = decryptData(scannedText, SECRET_KEY);
                         if (decryptedText && decryptedText.includes('|')) {
-                            showData(decryptedText);
+                            currentDecodedText = decryptedText;
+                            let parts = decryptedText.split('|');
+                            document.getElementById('display-name').innerText = parts[0] || '-';
+                            document.getElementById('display-email').innerText = parts[2] || '-';
+                            document.getElementById('data-container').style.display = 'block';
                         } else {
-                            alert("❌ هذا الـ QR Code غير صالح أو غير مشفر بنظامنا!");
-                            startCamera();
+                            alert("❌ كود غير صالح!"); startCamera();
                         }
-                    }).catch(err => console.log("خطأ في قفل الكاميرا", err));
+                    });
                 },
-                (errorMessage) => {}
-            ).catch(err => {
-                alert("⚠️ تعذر فتح الكاميرا. يرجى التأكد من منح الصلاحيات أو استخدام متصفح حديث.");
-                document.getElementById('btn-start').style.display = 'block';
-                document.getElementById('reader').style.display = 'none';
-            });
-        }
-
-        function showData(text) {
-            currentDecodedText = text; 
-            let parts = text.split('|');
-            document.getElementById('display-name').innerText = parts[0] ? parts[0].trim() : '-';
-            document.getElementById('display-nid').innerText = parts[1] ? parts[1].trim() : '-';
-            document.getElementById('display-email').innerText = parts[2] ? parts[2].trim() : '-';
-            document.getElementById('data-container').style.display = 'block';
+                (err) => {}
+            ).catch(() => { alert("⚠️ تعذر فتح الكاميرا."); document.getElementById('btn-start').style.display = 'block'; });
         }
 
         function playBeep() {
             try {
-                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                const oscillator = audioCtx.createOscillator();
-                const gainNode = audioCtx.createGain();
-        
-                oscillator.type = 'sine';
-                oscillator.frequency.value = 800;
-        
-                gainNode.gain.setValueAtTime(1, audioCtx.currentTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1); 
-        
-                oscillator.connect(gainNode);
-                gainNode.connect(audioCtx.destination);
-        
-                oscillator.start();
-                oscillator.stop(audioCtx.currentTime + 0.1);
-            } catch (e) {
-                console.log("متصفحك لا يدعم توليد الصوت");
-            }
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator(); const gain = ctx.createGain();
+                osc.type = 'sine'; osc.frequency.value = 800;
+                gain.gain.setValueAtTime(1, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1); 
+                osc.connect(gain); gain.connect(ctx.destination);
+                osc.start(); osc.stop(ctx.currentTime + 0.1);
+            } catch (e) {}
         }
 
-        function registerAttendance() {
-            document.getElementById('result-msg').innerText = "جاري التسجيل...";
-            document.getElementById('result-msg').style.color = "orange";
-            document.getElementById('btn-register').disabled = true;
+        // --- تسجيل الحضور (QR) ---
+        function registerAttendanceQR() {
+            const msg = document.getElementById('result-msg-qr');
+            const btn = document.getElementById('btn-register-qr');
+            msg.innerText = "⏳ جاري التسجيل..."; msg.style.color = "#ffb703"; btn.disabled = true;
 
-            fetch(APPS_SCRIPT_URL + "?id=" + encodeURIComponent(currentDecodedText), { mode: 'no-cors' })
-                .then(() => {
-                    document.getElementById('result-msg').innerText = "✅ تم التسجيل بنجاح!";
-                    document.getElementById('result-msg').style.color = "green";
-                    setTimeout(() => {
-                        startCamera();
-                    }, 2000);
-                }).catch(err => {
-                    document.getElementById('result-msg').innerText = "❌ حدث خطأ في الاتصال!";
-                    document.getElementById('result-msg').style.color = "red";
-                    document.getElementById('btn-register').disabled = false;
-                });
+            fetch(APPS_SCRIPT_URL + "?action=register&id=" + encodeURIComponent(currentDecodedText))
+                .then(res => res.json())
+                .then(data => {
+                    msg.innerText = data.message;
+                    msg.style.color = data.success ? "#28a745" : "#dc3545";
+                    if(data.success) setTimeout(startCamera, 2000);
+                    else btn.disabled = false;
+                }).catch(() => { msg.innerText = "❌ خطأ في الاتصال!"; msg.style.color = "#dc3545"; btn.disabled = false; });
+        }
+
+        // --- تسجيل الحضور (يدوي بالإيميل) ---
+        function registerAttendanceManual() {
+            const email = document.getElementById('manual-email').value.trim();
+            const msg = document.getElementById('result-msg-manual');
+            const btn = document.getElementById('btn-register-manual');
+            
+            if (!email) { msg.innerText = "⚠️ يرجى إدخال الإيميل أولاً!"; msg.style.color = "#dc3545"; return; }
+            
+            msg.innerText = "⏳ جاري البحث والتسجيل..."; msg.style.color = "#ffb703"; btn.disabled = true;
+
+            fetch(APPS_SCRIPT_URL + "?action=register_manual&email=" + encodeURIComponent(email))
+                .then(res => res.json())
+                .then(data => {
+                    msg.innerText = data.message;
+                    msg.style.color = data.success ? "#28a745" : "#dc3545";
+                    if(data.success) document.getElementById('manual-email').value = ""; // تفريغ الخانة بعد النجاح
+                }).catch(() => { msg.innerText = "❌ خطأ في الاتصال!"; msg.style.color = "#dc3545"; })
+                .finally(() => btn.disabled = false);
         }
     </script>
-
 </body>
 </html>
