@@ -7,10 +7,10 @@
     <script src="https://unpkg.com/html5-qrcode"></script>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Cairo:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        /* تنسيق الصفحة بالكامل (الخلفية الزرقاء) */
+        /* التنسيقات العامة */
         body {
             font-family: 'Roboto', 'Cairo', sans-serif;
-            background-color: #0a193d; /* اللون الأزرق الداكن من اللوجو */
+            background-color: #0a193d;
             color: #ffffff;
             text-align: center;
             margin: 0;
@@ -21,12 +21,10 @@
             min-height: 100vh;
             box-sizing: border-box;
         }
-        /* تنسيق اللوجو */
         #logo {
             max-width: 500px;
             margin-bottom: 20px;
         }
-        /* العنوان الرئيسي */
         h1 {
             font-family: 'Roboto', sans-serif;
             font-weight: 700;
@@ -34,7 +32,6 @@
             margin-bottom: 30px;
             letter-spacing: 1px;
         }
-        /* الحاوية البيضاء الرئيسية */
         .container {
             background-color: #ffffff;
             color: #333;
@@ -44,7 +41,44 @@
             width: 100%;
             max-width: 500px;
         }
-        /* منطقة الكاميرا */
+
+        /* --- تنسيقات تسجيل الدخول الجديدة --- */
+        .input-field {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-family: 'Cairo', sans-serif;
+            font-size: 16px;
+            text-align: right;
+        }
+        #login-error {
+            color: #dc3545;
+            font-weight: bold;
+            display: none;
+            margin-top: 10px;
+        }
+        .header-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        #btn-logout {
+            background-color: #6c757d;
+            color: white;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+            font-weight: bold;
+        }
+        #btn-logout:hover { background-color: #5a6268; }
+
+        /* منطقة الكاميرا وعرض البيانات */
         #reader {
             width: 100%;
             border-radius: 10px;
@@ -52,13 +86,11 @@
             margin-bottom: 20px;
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
-        /* إخفاء أيقونة التحميل الافتراضية للمكتبة */
         #reader img[alt="Info icon"] { display: none; }
         #reader__status_span { display: none !important; }
 
-        /* منطقة عرض البيانات */
         #data-container {
-            display: none; /* مخفية في البداية */
+            display: none;
             margin-top: 20px;
         }
         .data-row {
@@ -72,8 +104,8 @@
             display: block;
             margin-top: 5px;
         }
-        
-        /* تنسيق الأزرار */
+
+        /* الأزرار */
         .btn {
             padding: 12px 25px;
             font-size: 18px;
@@ -93,13 +125,12 @@
         #btn-cancel { background-color: #dc3545; color: white; }
         #btn-cancel:hover { background-color: #c82333; }
         button:disabled { background-color: #6c757d !important; cursor: not-allowed; opacity: 0.8; }
-        
-        /* رسائل النتيجة */
+
         #result-msg {
             margin-top: 20px;
             font-size: 18px;
             font-weight: 700;
-            min-height: 27px; /* حجز مكان للرسالة عشان الصفحة متتهزش */
+            min-height: 27px;
         }
     </style>
 </head>
@@ -108,9 +139,21 @@
     <img id="logo" src="logo.png" alt="ICPC Mansoura Logo">
     <h1>ICPC Mansoura Attendance</h1>
 
-    <div class="container">
-        <button id="btn-start" class="btn" onclick="startCamera()">فتح الكاميرا للمسح</button>
+    <div id="login-container" class="container">
+        <h2 style="margin-top: 0;">تسجيل دخول المنظمين</h2>
+        <input type="text" id="username" class="input-field" placeholder="اسم المستخدم">
+        <input type="password" id="password" class="input-field" placeholder="كلمة المرور">
+        <button class="btn" id="btn-login" onclick="checkLogin()">تسجيل الدخول</button>
+        <p id="login-error">اسم المستخدم أو كلمة المرور غير صحيحة!</p>
+    </div>
+
+    <div id="app-container" class="container" style="display: none;">
+        <div class="header-controls">
+            <h3 style="margin: 0; color: #0056b3;">لوحة المسح</h3>
+            <button id="btn-logout" onclick="logout()">تسجيل خروج</button>
+        </div>
         
+        <button id="btn-start" class="btn" onclick="startCamera()">فتح الكاميرا للمسح</button>
         <div id="reader"></div>
 
         <div id="data-container">
@@ -125,17 +168,64 @@
     </div>
 
     <script>
-        // *** ⚠️ استبدل هذا الرابط برابط الـ Apps Script الخاص بك ⚠️ ***
+        // ------------------ إعدادات الدخول ------------------
+        const VALID_USERNAME = "admin";    // 👈 غير اسم المستخدم من هنا
+        const VALID_PASSWORD = "icpc";     // 👈 غير كلمة المرور من هنا
+        // ----------------------------------------------------
+
         const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx7UFfhyGZDyaBfEKmRnB6kSaSinIiaAQ9alw0Wzl-b5tnXpn7UhoWwMhGCYla1DGJWHQ/exec"; 
-        
-        // 🔑 نفس المفتاح السري اللي في البايثون بالظبط
         const SECRET_KEY = "omarloveicpc"; 
 
         let html5QrCode;
         let currentDecodedText = "";
-        const beepSound = new Audio('beep.mp3'); // ملف الصوت
 
-        // دالة فك التشفير
+        // التحقق عند تحميل الصفحة إذا كان مسجلاً للدخول مسبقاً
+        window.onload = function() {
+            if (sessionStorage.getItem("isLoggedIn") === "true") {
+                showApp();
+            }
+        };
+
+        // دالة تسجيل الدخول
+        function checkLogin() {
+            const user = document.getElementById("username").value.trim();
+            const pass = document.getElementById("password").value.trim();
+
+            if (user === VALID_USERNAME && pass === VALID_PASSWORD) {
+                sessionStorage.setItem("isLoggedIn", "true");
+                document.getElementById("login-error").style.display = "none";
+                showApp();
+            } else {
+                document.getElementById("login-error").style.display = "block";
+            }
+        }
+
+        // دالة إظهار التطبيق
+        function showApp() {
+            document.getElementById("login-container").style.display = "none";
+            document.getElementById("app-container").style.display = "block";
+        }
+
+        // دالة تسجيل الخروج
+        function logout() {
+            sessionStorage.removeItem("isLoggedIn");
+            document.getElementById("username").value = "";
+            document.getElementById("password").value = "";
+            
+            // إيقاف الكاميرا إذا كانت تعمل
+            if (html5QrCode && html5QrCode.isScanning) {
+                html5QrCode.stop().catch(err => console.log(err));
+            }
+            
+            document.getElementById("app-container").style.display = "none";
+            document.getElementById("login-container").style.display = "block";
+            document.getElementById("reader").style.display = "none";
+            document.getElementById("data-container").style.display = "none";
+            document.getElementById("btn-start").style.display = "block";
+        }
+
+        // --- باقي دوال النظام كما هي ---
+
         function decryptData(encodedText, key) {
             try {
                 let binaryString = atob(encodedText);
@@ -151,7 +241,7 @@
         function startCamera() {
             document.getElementById('data-container').style.display = 'none';
             document.getElementById('btn-start').style.display = 'none';
-            document.getElementById('reader').style.display = 'block'; // إظهار الكاميرا
+            document.getElementById('reader').style.display = 'block';
             document.getElementById('result-msg').innerText = "";
             document.getElementById('btn-register').disabled = false;
 
@@ -167,25 +257,24 @@
                 html5QrCode = new Html5Qrcode("reader");
             }
             html5QrCode.start(
-                { facingMode: "environment" }, // استخدام الكاميرا الخلفية
+                { facingMode: "environment" },
                 { fps: 10, qrbox: {width: 250, height: 250} },
                 (scannedEncryptedText) => {
-                    // تشغيل الصوت وقفل الكاميرا
-                      playBeep(); // تشغيل الصوت المبرمج
+                      playBeep();
                      html5QrCode.stop().then(() => {
-                        document.getElementById('reader').style.display = 'none'; // إخفاء الكاميرا
+                        document.getElementById('reader').style.display = 'none';
                         let decryptedText = decryptData(scannedEncryptedText, SECRET_KEY);
                         if (decryptedText && decryptedText.includes('|')) {
                             showData(decryptedText);
                         } else {
                             alert("❌ هذا الـ QR Code غير صالح أو غير مشفر بنظامنا!");
-                            startCamera(); // إعادة فتح الكاميرا
+                            startCamera();
                         }
                     }).catch(err => console.log("خطأ في قفل الكاميرا", err));
                 },
                 (errorMessage) => {}
             ).catch(err => {
-                alert("⚠️ تعذر فتح الكاميرا. يرجى التأكد من منح الصلاحيات أو استخدام متصفح حديث (مثل Chrome أو Safari).");
+                alert("⚠️ تعذر فتح الكاميرا. يرجى التأكد من منح الصلاحيات أو استخدام متصفح حديث.");
                 document.getElementById('btn-start').style.display = 'block';
                 document.getElementById('reader').style.display = 'none';
             });
@@ -200,18 +289,16 @@
             document.getElementById('data-container').style.display = 'block';
         }
 
-        // دالة إصدار صوت الـ Beep برمجياً (بدون ملفات)
         function playBeep() {
             try {
                 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                 const oscillator = audioCtx.createOscillator();
                 const gainNode = audioCtx.createGain();
         
-                oscillator.type = 'sine'; // نوع نغمة الصوت
-                oscillator.frequency.value = 800; // حدة الصوت (800 ممتازة للاسكانر)
+                oscillator.type = 'sine';
+                oscillator.frequency.value = 800;
         
                 gainNode.gain.setValueAtTime(1, audioCtx.currentTime);
-                // الصوت يختفي تدريجياً خلال 0.1 ثانية
                 gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1); 
         
                 oscillator.connect(gainNode);
@@ -235,7 +322,7 @@
                     document.getElementById('result-msg').style.color = "green";
                     setTimeout(() => {
                         startCamera();
-                    }, 2000); // العودة للكاميرا بعد ثانيتين
+                    }, 2000);
                 }).catch(err => {
                     document.getElementById('result-msg').innerText = "❌ حدث خطأ في الاتصال!";
                     document.getElementById('result-msg').style.color = "red";
@@ -246,6 +333,3 @@
 
 </body>
 </html>
-
-
-
