@@ -141,8 +141,8 @@
         </div>
 
         <div id="section-manual" style="display: none;">
-            <p style="color: #6c757d; font-size: 14px; margin-bottom: 10px;">أدخل البريد الإلكتروني للمشارك في حال تعذر مسح الكود:</p>
-            <input type="email" id="manual-email" class="input-field" placeholder="example@email.com" dir="ltr">
+            <p style="color: #6c757d; font-size: 14px; margin-bottom: 10px;">أدخل ICPC Code للمشارك في حال تعذر مسح الكود:</p>
+            <input type="email" id="manual-email" class="input-field" placeholder="1234" dir="ltr">
             <button id="btn-register-manual" class="btn btn-primary" onclick="registerAttendanceManual()">تسجيل الحضور</button>
             <p id="result-msg-manual" class="result-msg"></p>
         </div>
@@ -300,7 +300,7 @@
             const msg = document.getElementById('result-msg-manual');
             const btn = document.getElementById('btn-register-manual');
             
-            if (!email) { msg.innerText = "⚠️ يرجى إدخال الإيميل أولاً!"; msg.style.color = "#dc3545"; return; }
+            if (!email) { msg.innerText = "⚠️ يرجى إدخال الكود أولاً!"; msg.style.color = "#dc3545"; return; }
             
             msg.innerText = "⏳ جاري البحث والتسجيل..."; msg.style.color = "#ffb703"; btn.disabled = true;
 
@@ -316,4 +316,5 @@
     </script>
 </body>
 </html>
+
 
